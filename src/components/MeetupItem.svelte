@@ -1,11 +1,21 @@
 <script>
+  import { createEventDispatcher } from "svelte";
   import Button from "./Button.svelte";
+
+  export let id;
   export let title;
   export let subTitle;
   export let imageUrl;
   export let description;
   export let address;
   export let contactmail;
+  export let isFav;
+
+  const dispath = createEventDispatcher();
+
+  function toggleFavorite(id) {
+    dispath("toggle-favorite", id);
+  }
 </script>
 
 <article>
@@ -22,8 +32,12 @@
   </div>
   <footer>
     <Button href="mailto:{contactmail}" text="Contact" />
+    <Button
+      mode="outline"
+      text={isFav ? "Favorite" : "Unfavorite"}
+      on:click={() => toggleFavorite(id)}
+    />
     <Button mode="outline" text="Show Details" />
-    <Button text="Favorite" />
   </footer>
 </article>
 

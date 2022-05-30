@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte";
   import Header from "./components/Header.svelte";
   import MeetupGrid from "./components/MeetupGrid.svelte";
   import TextInput from "./components/TextInput.svelte";
@@ -13,6 +14,11 @@
   let contactmail = "";
 
   let vibleModal = false;
+  let closeable = false;
+
+  onMount(() => {
+    console.log("onMount");
+  });
 
   let meetups = [
     {
@@ -24,6 +30,7 @@
         "https://cdn.ucberkeleybootcamp.com/wp-content/uploads/sites/106/2020/12/tes_gen_blog_code6-800x412.jpg",
       address: "27th Nerd Road, 32523 New York",
       contactmail: "code@test.com",
+      isFav: true,
     },
     {
       id: "m2",
@@ -34,6 +41,7 @@
         "https://www.ussportscamps.com/media/images/swim/nike/camps/Nike-Swim-Underwater-Freestyle.jpg",
       address: "27th Nerd Road, 32523 New York",
       contactmail: "swim@test.com",
+      isFav: false,
     },
   ];
 
@@ -50,17 +58,42 @@
 
     meetups = [...meetups, newMeetup];
   }
+
+  function toggleFavorite(event) {
+    const id = event.detail;
+    const updatedMeetups = meetups.map((m) => {
+      if (m.id === id) {
+        m.isFav = !m.isFav;
+        return m;
+      }
+      return m;
+    });
+
+    meetups = updatedMeetups;
+  }
 </script>
 
 <Header />
 <div class="meetup-app">
-  <Modal visible={vibleModal} on:on-close={() => (vibleModal = false)}>
+  <Modal
+    visible={vibleModal}
+    on:on-close={() => {
+      vibleModal = false;
+    }}
+    let:didAgree={closeable}
+  >
     <header slot="header">
       <h1>Modal title</h1>
     </header>
 
     <div slot="content">
       <p>Content modal</p>
+    </div>
+
+    <div slot="footer">
+      <button disabled={!closeable} on:click={() => (vibleModal = false)}>
+        custom modal
+      </button>
     </div>
   </Modal>
 
@@ -114,7 +147,7 @@
 
     <Button type="submit" text="Submit" />
   </form>
-  <MeetupGrid {meetups} />
+  <MeetupGrid {meetups} on:toggle-favorite={toggleFavorite} />
 </div>
 
 <style>

@@ -1,14 +1,14 @@
 <script>
-  export let type;
-  export let text;
-  export let mode;
-  export let href;
+  export let type = "text";
+  export let text = "";
+  export let mode = undefined;
+  export let href = "";
 </script>
 
 {#if href}
   <a {href}>{text}</a>
 {:else}
-  <button class={mode} {type}> {text} </button>
+  <button class={mode} {type} on:click> {text} </button>
 {/if}
 
 <style>

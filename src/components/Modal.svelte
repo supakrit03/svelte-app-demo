@@ -2,9 +2,12 @@
   import { createEventDispatcher } from "svelte";
   export let visible = false;
 
+  let agreed = false;
+
   const dispatch = createEventDispatcher();
 
   function onClose() {
+    agreed = false;
     console.log("close modal");
     dispatch("on-close");
   }
@@ -15,8 +18,11 @@
   <div class="modal">
     <slot name="header" />
     <slot name="content" />
-    <slot name="footer">
-      <button on:click={onClose}>Close</button>
+
+    <button on:click={() => (agreed = true)}>Agree</button>
+
+    <slot name="footer" didAgree={agreed}>
+      <button disabled={!agreed} on:click={onClose}>Close</button>
     </slot>
   </div>
 {/if}
