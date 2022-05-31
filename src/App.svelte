@@ -2,19 +2,24 @@
   import { onMount } from "svelte";
   import Header from "./components/Header.svelte";
   import MeetupGrid from "./components/MeetupGrid.svelte";
-  import TextInput from "./components/TextInput.svelte";
   import Button from "./components/Button.svelte";
-  import Modal from "./components/Modal.svelte";
+  import Toggle from "./components/Toggle.svelte";
 
-  let title = "";
-  let subTitle = "";
-  let description = "";
-  let imageUrl = "";
-  let address = "";
-  let contactmail = "";
+  import Modal from "./components/Modal.svelte";
+  import FormMeetup from "./components/FormMeetup.svelte";
 
   let vibleModal = false;
-  let closeable = false;
+
+  let editMode = false;
+  let chosenOption = 1;
+
+  function closeModal() {
+    vibleModal = false;
+  }
+
+  function openModal() {
+    vibleModal = true;
+  }
 
   onMount(() => {
     console.log("onMount");
@@ -45,7 +50,9 @@
     },
   ];
 
-  function addMeetup() {
+  function addMeetup(event) {
+    const { title, subTitle, description, imageUrl, address, contactmail } =
+      event.detail;
     const newMeetup = {
       id: new Date().getMilliseconds(),
       title,
@@ -57,6 +64,7 @@
     };
 
     meetups = [...meetups, newMeetup];
+    closeModal();
   }
 
   function toggleFavorite(event) {
@@ -76,89 +84,32 @@
 <Header />
 <div class="meetup-app">
   <Modal
+    title="Create meetup"
     visible={vibleModal}
     on:on-close={() => {
-      vibleModal = false;
+      closeModal();
     }}
-    let:didAgree={closeable}
   >
-    <header slot="header">
-      <h1>Modal title</h1>
-    </header>
-
-    <div slot="content">
-      <p>Content modal</p>
-    </div>
-
-    <div slot="footer">
-      <button disabled={!closeable} on:click={() => (vibleModal = false)}>
-        custom modal
-      </button>
-    </div>
+    <FormMeetup on:save={addMeetup} />
   </Modal>
 
-  <button on:click={() => (vibleModal = true)}>Open modal</button>
-  <form on:submit|preventDefault={addMeetup}>
-    <TextInput
-      id="title"
-      label="Title"
-      type="text"
-      value={title}
-      on:input={(e) => (title = e.target.value)}
-    />
-    <TextInput
-      id="subtitle"
-      label="Subtitle"
-      type="text"
-      value={subTitle}
-      on:input={(e) => (subTitle = e.target.value)}
-    />
+  <Button on:click={openModal} text="Open modal" />
 
-    <TextInput
-      id="address"
-      label="Address"
-      type="text"
-      value={address}
-      on:input={(e) => (address = e.target.value)}
-    />
+  <Button
+    on:click={() => {
+      openModal();
+    }}
+    text="New meetup"
+  />
 
-    <TextInput
-      id="description"
-      label="Description"
-      type="text"
-      value={description}
-      on:input={(e) => (description = e.target.value)}
-    />
-    <TextInput
-      id="imageUrl"
-      label="Image url"
-      type="text"
-      value={imageUrl}
-      on:input={(e) => (imageUrl = e.target.value)}
-    />
-
-    <TextInput
-      id="contactmail"
-      label="Contactmail"
-      type="text"
-      value={contactmail}
-      on:input={(e) => (contactmail = e.target.value)}
-    />
-
-    <Button type="submit" text="Submit" />
-  </form>
   <MeetupGrid {meetups} on:toggle-favorite={toggleFavorite} />
+
+  <Toggle bind:chosenOption />
 </div>
 
 <style>
   .meetup-app {
     margin-top: 4rem;
-  }
-
-  form {
-    width: 30rem;
-    max-width: 90%;
-    margin: auto;
   }
 
   header {

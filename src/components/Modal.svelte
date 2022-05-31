@@ -1,14 +1,13 @@
 <script>
   import { createEventDispatcher } from "svelte";
-  export let visible = false;
+  import Button from "./Button.svelte";
 
-  let agreed = false;
+  export let title;
+  export let visible;
 
   const dispatch = createEventDispatcher();
 
   function onClose() {
-    agreed = false;
-    console.log("close modal");
     dispatch("on-close");
   }
 </script>
@@ -16,13 +15,11 @@
 {#if visible}
   <div class="backdrop" on:click={onClose} />
   <div class="modal">
-    <slot name="header" />
-    <slot name="content" />
+    <h1>{title}</h1>
+    <slot />
 
-    <button on:click={() => (agreed = true)}>Agree</button>
-
-    <slot name="footer" didAgree={agreed}>
-      <button disabled={!agreed} on:click={onClose}>Close</button>
+    <slot name="footer">
+      <Button on:click={onClose} text="Close" />
     </slot>
   </div>
 {/if}
