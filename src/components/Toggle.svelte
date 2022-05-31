@@ -1,6 +1,10 @@
 <script>
   export let chosenOption = 1;
   let ref = null;
+
+  export function setOption(selectOption) {
+    chosenOption = selectOption;
+  }
 </script>
 
 <div bind:this={ref} on:click={() => console.log(ref)}>

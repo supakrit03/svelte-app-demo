@@ -12,6 +12,7 @@
 
   let editMode = false;
   let chosenOption = 1;
+  let refToggle = null;
 
   function closeModal() {
     vibleModal = false;
@@ -105,6 +106,8 @@
   <MeetupGrid {meetups} on:toggle-favorite={toggleFavorite} />
 
   <Toggle bind:chosenOption />
+  <Toggle bind:this={refToggle} />
+  <button on:click={() => refToggle?.setOption(2)}>set toggle option 2</button>
 </div>
 
 <style>
