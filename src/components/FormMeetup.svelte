@@ -1,8 +1,10 @@
 <script>
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte";
+  import meetupsStore from "../stores/meetups-store";
   import TextInput from "./TextInput.svelte";
   import Button from "./Button.svelte";
 
+  export let id = "";
   let title = "";
   let subTitle = "";
   let imageUrl = "";
@@ -11,11 +13,36 @@
   let contactmail = "";
 
   const dispath = createEventDispatcher();
+
+  onMount(() => {
+    if (id) {
+      const meetupItem = $meetupsStore.find((item) => item.id === id);
+
+      title = meetupItem.title;
+      subTitle = meetupItem.subTitle;
+      imageUrl = meetupItem.imageUrl;
+      description = meetupItem.description;
+      address = meetupItem.address;
+      contactmail = meetupItem.contactmail;
+    }
+  });
 </script>
 
 <form
   on:submit={(event) => {
     event.preventDefault();
+    if (id) {
+      dispath("update", {
+        title,
+        subTitle,
+        imageUrl,
+        description,
+        address,
+        contactmail,
+      });
+      return;
+    }
+
     dispath("save", {
       title,
       subTitle,
@@ -73,6 +100,14 @@
   />
 
   <Button type="submit" text="Submit" />
+  {#if id}
+    <Button
+      mode="outline"
+      type="button"
+      text="Delete"
+      on:click={() => dispath("delete", id)}
+    />
+  {/if}
 </form>
 
 <style>

@@ -1,18 +1,29 @@
 <script>
   import { onMount } from "svelte";
+  import meetupsStore from "./stores/meetups-store";
   import Header from "./components/Header.svelte";
   import MeetupGrid from "./components/MeetupGrid.svelte";
   import Button from "./components/Button.svelte";
-  import Toggle from "./components/Toggle.svelte";
-
+  import FilterButton from "./components/FilterButton.svelte";
   import Modal from "./components/Modal.svelte";
   import FormMeetup from "./components/FormMeetup.svelte";
 
-  let vibleModal = false;
+  import { getMeetups } from "./apis/getMeetups";
+  import { postMeetup } from "./apis/postMeetup";
+  import { patchMeetup } from "./apis/patchMeetup";
+  import { deleteMeetup } from "./apis/deleteMeetup";
 
-  let editMode = false;
-  let chosenOption = 1;
-  let refToggle = null;
+  let vibleModal = false;
+  let vibleModalEdit = false;
+  let selectedMeetup = "";
+  let loadingMeetups = false;
+  let error;
+
+  let filterBy = "all"; // All meetups
+
+  $: meetupsFilter = $meetupsStore.filter((m) =>
+    filterBy === "all" ? true : m.isFav
+  );
 
   function closeModal() {
     vibleModal = false;
@@ -22,63 +33,56 @@
     vibleModal = true;
   }
 
+  function fetchMeetups() {
+    loadingMeetups = true;
+    getMeetups()
+      .then((meetups) => meetupsStore.setMeetups(meetups))
+      .catch((err) => {
+        error = err;
+      })
+      .finally(() => (loadingMeetups = false));
+  }
+
   onMount(() => {
-    console.log("onMount");
+    fetchMeetups();
   });
 
-  let meetups = [
-    {
-      id: "m1",
-      title: "Coding Bootcamp",
-      subTitle: "Learn to code in 2 hours",
-      description: "In this meetup , we will have some experts that teach",
-      imageUrl:
-        "https://cdn.ucberkeleybootcamp.com/wp-content/uploads/sites/106/2020/12/tes_gen_blog_code6-800x412.jpg",
-      address: "27th Nerd Road, 32523 New York",
-      contactmail: "code@test.com",
-      isFav: true,
-    },
-    {
-      id: "m2",
-      title: "Swim Together",
-      subTitle: "Let's go for some swimming",
-      description: "We will simply swim some rounds",
-      imageUrl:
-        "https://www.ussportscamps.com/media/images/swim/nike/camps/Nike-Swim-Underwater-Freestyle.jpg",
-      address: "27th Nerd Road, 32523 New York",
-      contactmail: "swim@test.com",
-      isFav: false,
-    },
-  ];
-
-  function addMeetup(event) {
-    const { title, subTitle, description, imageUrl, address, contactmail } =
-      event.detail;
-    const newMeetup = {
-      id: new Date().getMilliseconds(),
-      title,
-      subTitle,
-      description,
-      imageUrl,
-      address,
-      contactmail,
-    };
-
-    meetups = [...meetups, newMeetup];
+  async function addMeetup(event) {
+    await postMeetup(event.detail);
+    await fetchMeetups();
     closeModal();
   }
 
-  function toggleFavorite(event) {
-    const id = event.detail;
-    const updatedMeetups = meetups.map((m) => {
-      if (m.id === id) {
-        m.isFav = !m.isFav;
-        return m;
-      }
-      return m;
-    });
+  async function editMeetup(event) {
+    await patchMeetup(selectedMeetup, event.detail);
+    await fetchMeetups();
+    vibleModalEdit = false;
+  }
 
-    meetups = updatedMeetups;
+  async function deleteMeetupFn(event) {
+    const id = event.detail;
+    await deleteMeetup(id);
+    await fetchMeetups();
+    vibleModalEdit = false;
+  }
+
+  async function toggleFavorite(event) {
+    const id = event.detail;
+    meetupsStore.toggleMeetupFavorite(id);
+    const meetup = $meetupsStore.find((m) => m.id === id);
+    await patchMeetup(id, meetup);
+    await fetchMeetups();
+  }
+
+  function showDetail(event) {
+    const id = event.detail;
+
+    vibleModalEdit = true;
+    selectedMeetup = id;
+  }
+
+  function filterMeetups(event) {
+    filterBy = event.detail;
   }
 </script>
 
@@ -94,7 +98,20 @@
     <FormMeetup on:save={addMeetup} />
   </Modal>
 
-  <Button on:click={openModal} text="Open modal" />
+  <Modal
+    title="Edit meetup"
+    visible={vibleModalEdit}
+    on:on-close={() => {
+      vibleModalEdit = false;
+    }}
+  >
+    <FormMeetup
+      id={selectedMeetup}
+      on:save={addMeetup}
+      on:update={editMeetup}
+      on:delete={deleteMeetupFn}
+    />
+  </Modal>
 
   <Button
     on:click={() => {
@@ -103,19 +120,41 @@
     text="New meetup"
   />
 
-  <MeetupGrid {meetups} on:toggle-favorite={toggleFavorite} />
+  <br />
+  <FilterButton value={filterBy} on:select={filterMeetups} />
 
-  <Toggle bind:chosenOption />
-  <Toggle bind:this={refToggle} />
-  <button on:click={() => refToggle?.setOption(2)}>set toggle option 2</button>
+  {#if error}
+    <div class="error">{error.message}</div>
+  {/if}
+
+  {#if loadingMeetups}
+    <div class="loading">
+      <span>Loading...</span>
+    </div>
+  {:else}
+    <MeetupGrid
+      meetups={meetupsFilter}
+      on:toggle-favorite={toggleFavorite}
+      on:show-detail={showDetail}
+    />
+  {/if}
 </div>
 
 <style>
   .meetup-app {
     margin-top: 4rem;
   }
-
   header {
     border-bottom: 1px solid #ccc;
+  }
+
+  .loading {
+    padding: 1em;
+    margin: 0 auto;
+  }
+
+  .error {
+    padding: 1em;
+    color: red;
   }
 </style>

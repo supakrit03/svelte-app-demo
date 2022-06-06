@@ -43,7 +43,11 @@
       text={isFav ? "Unfavorite" : "Favorite"}
       on:click={() => toggleFavorite(id)}
     />
-    <Button mode="outline" text="Show Details" />
+    <Button
+      mode="outline"
+      text="Show Details"
+      on:click={() => dispath("show-detail", id)}
+    />
   </footer>
 </article>
 
